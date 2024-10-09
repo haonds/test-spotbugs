@@ -47,7 +47,7 @@ spotbugs {
 
 tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
 	reports {
-		xml.enabled = false
+		xml.enabled = true
 		html.enabled = true
 	}
 }

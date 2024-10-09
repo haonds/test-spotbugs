@@ -1,0 +1,32 @@
+name: SpotBugs Analysis
+
+on:
+  pull_request
+
+jobs:
+  spotbugs:
+    runs-on: ubuntu-latest
+    name: Test spotbugs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "adopt"
+          java-version: "17"
+
+      - name: Run SpotBugs for main project
+        run: ./gradlew spotbugsMain
+
+      - name: Upload SpotBugs report for main project
+        uses: jwgmeligmeyling/spotbugs-github-action@master
+        with:
+          path: '**/reports/spotbugs/main.xml'
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@v2.1.0 # Ex: v2.1.0, See the latest version at https://github.com/marketplace/actions/sonarcloud-scan
+        with:
+          projectBaseDir: test-spotbugs
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
