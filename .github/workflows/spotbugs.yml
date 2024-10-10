@@ -1,32 +1,39 @@
-name: SpotBugs Analysis
-
+name: SonarCloud
 on:
-  pull_request
-
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
 jobs:
-  spotbugs:
+  build:
+    name: Build and analyze
     runs-on: ubuntu-latest
-    name: Test spotbugs
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: "adopt"
-          java-version: "17"
-
-      - name: Run SpotBugs for main project
-        run: ./gradlew spotbugsMain
-
-      - name: Upload SpotBugs report for main project
-        uses: jwgmeligmeyling/spotbugs-github-action@master
+          java-version: 17
+          distribution: 'zulu' # Alternative distribution options are available
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
         with:
-          path: '**/reports/spotbugs/main.xml'
-      - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@v2.1.0 # Ex: v2.1.0, See the latest version at https://github.com/marketplace/actions/sonarcloud-scan
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
         with:
-          projectBaseDir: test-spotbugs
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Build and analyze
+        run: |
+          ./gradlew sonar -Dsonar.token=9928be6fb67bb4db51298d45fd659b39fe87e8cc \
+            -Dsonar.pullrequest.base=${{ github.base_ref }} \
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+            -Dsonar.pullrequest.provider=github \
+            -Dsonar.sources=src/main/java

@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '2.6.6'
 	id 'io.spring.dependency-management' version '1.1.6'
-	id 'com.github.spotbugs' version '5.2.5'
+	id "org.sonarqube" version "5.1.0.4882"
 }
 
 group = 'com'
@@ -38,16 +38,12 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-spotbugs {
-	toolVersion = '4.8.2'
-//    effort = 'max'
-	ignoreFailures = true
-	showStackTraces = true
-}
-
-tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-	reports {
-		xml.enabled = true
-		html.enabled = true
+sonar {
+	properties {
+		property "sonar.projectKey", "haonds_test-spotbugs"
+		property "sonar.organization", "hblab"
+		property "sonar.sources", "src/main/java"
+		property "sonar.java.binaries", "."
+		property "sonar.host.url", "https://sonarcloud.io"
 	}
 }
